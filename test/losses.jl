@@ -130,11 +130,14 @@ end
 
   @testset "single sample" begin
     ŷ = randn(C)
-    @test logitcrossentropy(ŷ, fill(2)) ≈ logitcrossentropy(ŷ, onehot(2, 1:C))
-    @test crossentropy(softmax(ŷ), fill(2)) ≈ crossentropy(softmax(ŷ), onehot(2, 1:C))
+    target = onehot(2, 1:C)
     for (loss, x) in ((logitcrossentropy, ŷ), (crossentropy, softmax(ŷ)))
-      @test gradient(x -> loss(x, fill(2)), x)[1] ≈ gradient(x -> loss(x, onehot(2, 1:C)), x)[1]
-      @test gradient(x -> loss(x, fill(2); agg = sum), x)[1] ≈ gradient(x -> loss(x, onehot(2, 1:C); agg = sum), x)[1]
+      @test loss(x, 2) ≈ loss(x, fill(2)) ≈ loss(x, target)
+      @test gradient(x -> loss(x, 2), x)[1] ≈ gradient(x -> loss(x, fill(2)), x)[1]
+      @test gradient(x -> loss(x, 2), x)[1] ≈ gradient(x -> loss(x, target), x)[1]
+      @test_throws ArgumentError loss(x, 99)
+      @test_throws ArgumentError loss(x, fill(99))
+      @test gradient(x -> loss(x, fill(2); agg = sum), x)[1] ≈ gradient(x -> loss(x, target; agg = sum), x)[1]
     end
   end
 

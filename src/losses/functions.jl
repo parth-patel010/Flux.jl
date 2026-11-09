@@ -198,6 +198,7 @@ dimension `dims`, e.g. a vector of length `size(ŷ, 2)` for a matrix `ŷ` and 
 The loss is then `agg(-log.(ŷ[y] .+ ϵ))`, where `ŷ[y]` are the entries of `ŷ` picked along `dims`
 by the labels, which `agg = identity` returns with the size of `y`.
 This gives the same loss as the one-hot encoding of `y`, without building it.
+For a single sample with vector `ŷ`, a scalar integer target is accepted like `fill(y)`.
 
 Use [`label_smoothing`](@ref) to smooth the true labels as preprocessing before
 computing the loss.
@@ -242,6 +243,7 @@ julia> Flux.crossentropy(y_model, [1, 2, 3, 2, 1])  # integer class labels
 ```
 """
 function crossentropy(ŷ, y; dims = 1, agg = mean, eps::Real = epseltype(ŷ))
+  y isa Integer && (y = fill(y))
   _islabels(ŷ, y, dims) && return agg(.-log.(_upcast(_gather_labels(ŷ, y, dims)) .+ eps))
   ŷ, y = _upcast(ŷ), _upcast(y)
   _check_sizes(ŷ, y)
@@ -263,6 +265,7 @@ As for [`crossentropy`](@ref), `y` can also hold integer class labels in `1:size
 with the size of `ŷ` without dimension `dims`. The loss is then
 `agg(logsumexp(ŷ; dims) .- ŷ[y])`, with `ŷ[y]` the entries of `ŷ` picked along `dims` by the labels,
 and has the size of `y` for `agg = identity`.
+For a single sample with vector `ŷ`, a scalar integer target is accepted like `fill(y)`.
 
 See also: [`binarycrossentropy`](@ref), [`logitbinarycrossentropy`](@ref), [`label_smoothing`](@ref).
 
@@ -291,6 +294,7 @@ julia> Flux.logitcrossentropy(y_model, [1, 2, 3, 1, 2, 1, 1])  # integer class l
 ```
 """
 function logitcrossentropy(ŷ, y; dims = 1, agg = mean)
+  y isa Integer && (y = fill(y))
   _islabels(ŷ, y, dims) && return agg(_logitce(ŷ, y, dims))
   ŷ, y = _upcast(ŷ), _upcast(y)
   _check_sizes(ŷ, y)
